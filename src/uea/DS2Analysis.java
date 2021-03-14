@@ -109,16 +109,16 @@ public class DS2Analysis
 
         for (int part = 0; part < ploss.length;)
         {
-            for (int i = 0; i < 4; i++) //From 0-3
+            for (int i = 0; i < d; i++) //From 0-3
             {
-                for (int j = 0; j < 4; j++) //From 0-3
+                for (int j = 0; j < d; j++) //From 0-3
                 {
                     newPloss[(i * d) + j + part] = ploss[Utils.piFunction(i, j, d) + part];
-                    //System.out.println("Setting newPloss: " + ((i * d) + j + part) + " to ploss[" + (Utils.piFunction(i, j, d) + part) + "] which is " + ploss[Utils.piFunction(i, j, d) + part] + " part = " + part);
+                    System.out.println("Setting newPloss: " + ((i * d) + j + part) + " to ploss[" + (Utils.piFunction(i, j, d) + part) + "] which is " + ploss[Utils.piFunction(i, j, d) + part] + " part = " + part);
                 }
             }
 
-            part = part + 16;
+            part = part + (d*d);
         }
 
         ploss = newPloss;
