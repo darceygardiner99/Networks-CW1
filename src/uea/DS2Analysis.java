@@ -11,6 +11,8 @@ public class DS2Analysis
         int currentLoss = 0;
         int last = 0;
 
+        remapPloss(4);
+
         for (int i = 0; i < ploss.length;)
         {
             i++;
@@ -97,6 +99,29 @@ public class DS2Analysis
 
         System.out.println("Largest packet loss burst: " + largestLoss);
         System.out.println("Largest packet send burst: " + largestLoss);
+    }
+
+    public static void remapPloss(int d)
+    {
+        int[] newPloss = new int[ploss.length];
+
+        System.out.println(ploss.length);
+
+        for (int part = 0; part < ploss.length;)
+        {
+            for (int i = 0; i < 4; i++) //From 0-3
+            {
+                for (int j = 0; j < 4; j++) //From 0-3
+                {
+                    newPloss[(i * d) + j + part] = ploss[Utils.piFunction(i, j, d) + part];
+                    //System.out.println("Setting newPloss: " + ((i * d) + j + part) + " to ploss[" + (Utils.piFunction(i, j, d) + part) + "] which is " + ploss[Utils.piFunction(i, j, d) + part] + " part = " + part);
+                }
+            }
+
+            part = part + 16;
+        }
+
+        ploss = newPloss;
     }
 
     static int[] ploss = new int[] {

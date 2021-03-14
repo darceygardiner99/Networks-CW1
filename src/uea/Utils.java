@@ -5,28 +5,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Utils
 {
-    public static void main(String[] args)
-    {
-        byte[] buff = {0, 0, 0, 0};
-
-        byte[] withId = applyId(buff, 1);
-
-        System.out.println(readId(withId));
-
-        byte[] withoutId = removeId(withId);
-
-        for (int i = 0; i < buff.length; i++)
-        {
-            if (buff[i] != withoutId[i])
-            {
-                System.out.println("Error at " + i);
-            }
-        }
-
-        System.out.println("");
-
-    }
-
     public static byte[] encrypt(byte[] block, int key)
     {
         ByteBuffer encrypted = ByteBuffer.allocate(block.length);
@@ -83,5 +61,12 @@ public class Utils
         newBlock.put(block, 4, block.length - 4);
 
         return newBlock.array();
+    }
+
+    public static int piFunction(int i, int j, int d)
+    {
+        int ret = j * d + (d-1-i);
+
+        return ret;
     }
 }
