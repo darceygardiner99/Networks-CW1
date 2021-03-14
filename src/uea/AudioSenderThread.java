@@ -7,6 +7,8 @@ import java.net.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 public class AudioSenderThread implements Runnable{
@@ -67,22 +69,42 @@ public class AudioSenderThread implements Runnable{
 
         //Id of packets
         int id = 0;
+        int blocksSent = 0;
+
+        Map<Integer, DatagramPacket> packetStore = new HashMap<>();
 
         while (running){
             try{
                 //Convert the audio recorder block into an array of bytes
                 //Size is 512
                 byte[] audio = audioRecorder.getBlock();
-                byte[] data = Utils.applyId(audio, id++);
+                byte[] timeStamp = Utils.applyTimestamp(audio, System.currentTimeMillis());
+                byte[] data = Utils.applyId(timeStamp, id++);
 
 
                 //Make a DatagramPacket from it, with client address and port number
                 DatagramPacket packet = new DatagramPacket(data, data.length, clientIP, this.port);
 
-                System.out.println("Sending Packet ID: " + (id -1) + " - " + Arrays.toString(audio));
+                /*System.out.println("Sending Packet ID: " + (id -1) + " - " + Arrays.toString(audio));*/
+
+                packetStore.put(id -1, packet);
 
                 //Send it
-                sending_socket.send(packet);
+                if (id != 0 && id % 16 == 0)
+                {
+                    for (int i = 0; i < 4; i++)
+                    {
+                        for (int j = 0; j < 4; j++)
+                        {
+                            int localId = (blocksSent * 16) + Utils.piFunction(i, j, 4);
+                            sending_socket.send(packetStore.remove(localId));
+
+                            //System.out.println("Sending Packet ID: " + localId + ".");
+                        }
+                    }
+
+                    blocksSent++;
+                }
 
             } catch (IOException e){
                 System.out.println("ERROR: " + getClass().getSimpleName() + ": Some random IO error occured!");
