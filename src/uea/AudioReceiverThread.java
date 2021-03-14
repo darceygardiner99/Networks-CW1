@@ -1,5 +1,3 @@
-package uea;
-
 import CMPC3M06.AudioPlayer;
 
 import javax.sound.sampled.LineUnavailableException;
@@ -11,8 +9,13 @@ public class AudioReceiverThread implements Runnable{
     static DatagramSocket receiving_socket;
     private final int port;
 
-    public AudioReceiverThread(int port)
+    /*public AudioReceiverThread(int port)
     {
+        this.port = port;
+    }*/
+
+    public AudioReceiverThread(DatagramSocket socket,int port){
+        receiving_socket = socket;
         this.port = port;
     }
 

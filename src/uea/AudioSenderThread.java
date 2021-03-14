@@ -1,4 +1,3 @@
-package uea;
 import CMPC3M06.AudioRecorder;
 
 import javax.sound.sampled.LineUnavailableException;
@@ -10,12 +9,18 @@ public class AudioSenderThread implements Runnable{
 
     static DatagramSocket sending_socket;
     private final int port;
-    private final String address;
+    private final InetSocketAddress address;
 
-    public AudioSenderThread(int port, String address)
+    /*public AudioSenderThread(int port, String address)
     {
         this.port = port;
         this.address = address;
+    }*/
+
+    public AudioSenderThread(DatagramSocket socket, InetSocketAddress address, int port){
+        sending_socket = socket;
+        this.address = address;
+        this.port = port;
     }
 
     public void start(){
@@ -28,7 +33,7 @@ public class AudioSenderThread implements Runnable{
         //IP ADDRESS to send to
         InetAddress clientIP = null;
         try {
-            clientIP = InetAddress.getByName(this.address);
+            clientIP = InetAddress.getByName(String.valueOf(this.address));
         } catch (UnknownHostException e) {
             System.out.println("ERROR: " + getClass().getSimpleName() + ": Could not find client IP");
             e.printStackTrace();
