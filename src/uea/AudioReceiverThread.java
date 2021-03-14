@@ -1,14 +1,16 @@
 package uea;
 
 import CMPC3M06.AudioPlayer;
+import uk.ac.uea.cmp.voip.DatagramSocket2;
 
 import javax.sound.sampled.LineUnavailableException;
 import java.net.*;
 import java.io.*;
+import java.util.Arrays;
 
 public class AudioReceiverThread implements Runnable{
 
-    static DatagramSocket receiving_socket;
+    static DatagramSocket2 receiving_socket;
     private final int port;
 
     public AudioReceiverThread(int port)
@@ -25,7 +27,7 @@ public class AudioReceiverThread implements Runnable{
 
         //Open a socket to receive from on port PORT
         try{
-            receiving_socket = new DatagramSocket(this.port);
+            receiving_socket = new DatagramSocket2(this.port);
         } catch (SocketException e){
             System.out.println("ERROR: " + getClass().getSimpleName() + ": Could not open UDP socket to receive from.");
             e.printStackTrace();
@@ -50,14 +52,24 @@ public class AudioReceiverThread implements Runnable{
         while (running){
             try{
                 //Receive a DatagramPacket (note that the string cant be more than 80 chars)
-                byte[] buffer = new byte[512];
-                DatagramPacket packet = new DatagramPacket(buffer, 0, 512);
+                byte[] buffer = new byte[516];
+                DatagramPacket packet = new DatagramPacket(buffer, 0, 516);
 
                 //Receive the packet
                 receiving_socket.receive(packet);
 
+                int id = Utils.readId(packet.getData());
+
+                packet.setData(Utils.removeId(packet.getData()));
+
+
+                if (id > 5)
+                {
+                    System.out.println("Receiving Packet ID: " + id + " - " + Arrays.toString(packet.getData()));
+                }
+
                 //Play the packet
-                audioPlayer.playBlock(buffer);
+                audioPlayer.playBlock(packet.getData());
 
             } catch (IOException e){
                 System.out.println("ERROR: " + getClass().getSimpleName() + ": Some random IO error occured!");
