@@ -63,6 +63,29 @@ public class Utils
         return newBlock.array();
     }
 
+    public static byte[] applyTimestamp(byte[] block, long time)
+    {
+        ByteBuffer newBlock = ByteBuffer.allocate(block.length + 8); // Long is 8 bytes, so add 8
+
+        newBlock.putLong(time);
+        newBlock.put(block);
+
+        return newBlock.array();
+    }
+
+    public static long readTimestamp(byte[] block)
+    {
+        return ByteBuffer.wrap(block).getLong();
+    }
+
+    public static byte[] removeTimestamp(byte[] block)
+    {
+        ByteBuffer newBlock = ByteBuffer.allocate(block.length - 8);
+        newBlock.put(block, 8, block.length - 8);
+
+        return newBlock.array();
+    }
+
     public static int piFunction(int i, int j, int d)
     {
         int ret = j * d + (d-1-i);
