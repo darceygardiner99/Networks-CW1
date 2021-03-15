@@ -14,10 +14,12 @@ public class AudioReceiverThread implements Runnable{
 
     static DatagramSocket2 receiving_socket;
     private final int port;
+    private final int blockSize;
 
-    public AudioReceiverThread(int port)
+    public AudioReceiverThread(int port, int blockSize)
     {
         this.port = port;
+        this.blockSize = blockSize;
     }
 
     public void start(){
@@ -76,9 +78,9 @@ public class AudioReceiverThread implements Runnable{
                 packetStore.put(id, packet.getData());
                 //System.out.println("Receiving Packet ID: " + id + ".");
 
-                if (id >= currentBlock + 16) // Assume the current block is done
+                if (id >= currentBlock + (blockSize * blockSize)) // Assume the current block is done
                 {
-                    for (int i = currentBlock; i < currentBlock + 16; i++)
+                    for (int i = currentBlock; i < currentBlock + (blockSize * blockSize); i++)
                     {
                         byte[] data = packetStore.remove(i);
 
@@ -86,7 +88,7 @@ public class AudioReceiverThread implements Runnable{
                         {
                             audioPlayer.playBlock(data);
                             previousData = data;
-                            System.out.println("Playing Packet ID: " + i + ". Took: " + (System.currentTimeMillis() - packetTimes.get(i)));
+                            System.out.println("Playing Packet ID: " + i + ". Took: " + ((System.nanoTime() - packetTimes.get(i)) / 1_000_000_000.0) + "s");
                         }
                         else if (previousData != null)
                         {
@@ -100,7 +102,7 @@ public class AudioReceiverThread implements Runnable{
                         }
                     }
 
-                    currentBlock += 16;
+                    currentBlock += (blockSize * blockSize);
                 }
             } catch (IOException e){
                 System.out.println("ERROR: " + getClass().getSimpleName() + ": Some random IO error occured!");

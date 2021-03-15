@@ -16,11 +16,13 @@ public class AudioSenderThread implements Runnable{
     static DatagramSocket2 sending_socket;
     private final int port;
     private final String address;
+    private final int blockSize;
 
-    public AudioSenderThread(int port, String address)
+    public AudioSenderThread(int port, String address, int blockSize)
     {
         this.port = port;
         this.address = address;
+        this.blockSize = blockSize;
     }
 
     public void start(){
@@ -78,7 +80,7 @@ public class AudioSenderThread implements Runnable{
                 //Convert the audio recorder block into an array of bytes
                 //Size is 512
                 byte[] audio = audioRecorder.getBlock();
-                byte[] timeStamp = Utils.applyTimestamp(audio, System.currentTimeMillis());
+                byte[] timeStamp = Utils.applyTimestamp(audio, System.nanoTime());
                 byte[] data = Utils.applyId(timeStamp, id++);
 
 
@@ -90,13 +92,13 @@ public class AudioSenderThread implements Runnable{
                 packetStore.put(id -1, packet);
 
                 //Send it
-                if (id != 0 && id % 16 == 0)
+                if (id != 0 && id % (blockSize*blockSize) == 0)
                 {
-                    for (int i = 0; i < 4; i++)
+                    for (int i = 0; i < blockSize; i++)
                     {
-                        for (int j = 0; j < 4; j++)
+                        for (int j = 0; j < blockSize; j++)
                         {
-                            int localId = (blocksSent * 16) + Utils.piFunction(i, j, 4);
+                            int localId = (blocksSent * (blockSize*blockSize)) + Utils.piFunction(i, j, blockSize);
                             sending_socket.send(packetStore.remove(localId));
 
                             //System.out.println("Sending Packet ID: " + localId + ".");
