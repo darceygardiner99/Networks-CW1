@@ -1,21 +1,28 @@
 package uea;
 import CMPC3M06.AudioRecorder;
+import uk.ac.uea.cmp.voip.DatagramSocket2;
 
 import javax.sound.sampled.LineUnavailableException;
 import java.net.*;
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 public class AudioSenderThread implements Runnable{
 
-    static DatagramSocket sending_socket;
+    static DatagramSocket2 sending_socket;
     private final int port;
     private final String address;
+    private final int blockSize;
 
-    public AudioSenderThread(int port, String address)
+    public AudioSenderThread(int port, String address, int blockSize)
     {
         this.port = port;
         this.address = address;
+        this.blockSize = blockSize;
     }
 
     public void start(){
@@ -40,7 +47,7 @@ public class AudioSenderThread implements Runnable{
         //We dont need to know its port number as we never send anything to it.
         //We need the try and catch block to make sure no errors occur.
         try{
-            sending_socket = new DatagramSocket();
+            sending_socket = new DatagramSocket2();
         } catch (SocketException e){
             System.out.println("ERROR: " + getClass().getSimpleName() + ": Could not open UDP socket to send from.");
             e.printStackTrace();
@@ -62,17 +69,44 @@ public class AudioSenderThread implements Runnable{
         //Main loop
         boolean running = true;
 
+        //Id of packets
+        int id = 0;
+        int blocksSent = 0;
+
+        Map<Integer, DatagramPacket> packetStore = new HashMap<>();
+
         while (running){
             try{
                 //Convert the audio recorder block into an array of bytes
                 //Size is 512
-                byte[] buffer = audioRecorder.getBlock();
+                byte[] audio = audioRecorder.getBlock();
+                byte[] timeStamp = Utils.applyTimestamp(audio, System.nanoTime());
+                byte[] data = Utils.applyId(timeStamp, id++);
+
 
                 //Make a DatagramPacket from it, with client address and port number
-                DatagramPacket packet = new DatagramPacket(buffer, buffer.length, clientIP, this.port);
+                DatagramPacket packet = new DatagramPacket(data, data.length, clientIP, this.port);
+
+                /*System.out.println("Sending Packet ID: " + (id -1) + " - " + Arrays.toString(audio));*/
+
+                packetStore.put(id -1, packet);
 
                 //Send it
-                sending_socket.send(packet);
+                if (id != 0 && id % (blockSize*blockSize) == 0)
+                {
+                    for (int i = 0; i < blockSize; i++)
+                    {
+                        for (int j = 0; j < blockSize; j++)
+                        {
+                            int localId = (blocksSent * (blockSize*blockSize)) + Utils.piFunction(i, j, blockSize);
+                            sending_socket.send(packetStore.remove(localId));
+
+                            //System.out.println("Sending Packet ID: " + localId + ".");
+                        }
+                    }
+
+                    blocksSent++;
+                }
 
             } catch (IOException e){
                 System.out.println("ERROR: " + getClass().getSimpleName() + ": Some random IO error occured!");
