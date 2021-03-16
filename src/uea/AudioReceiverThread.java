@@ -6,6 +6,7 @@ import uk.ac.uea.cmp.voip.DatagramSocket2;
 import javax.sound.sampled.LineUnavailableException;
 import java.net.*;
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,6 +59,7 @@ public class AudioReceiverThread implements Runnable{
         Map<Integer, byte[]> packetStore = new HashMap<>();
         Map<Integer, Long> packetTimes = new HashMap<>();
         byte[] previousData = null;
+        byte[] noData = ByteBuffer.allocate(512).array();
 
         while (running){
             try{
@@ -92,8 +94,8 @@ public class AudioReceiverThread implements Runnable{
                         }
                         else if (previousData != null)
                         {
-                            audioPlayer.playBlock(previousData);
-                            System.out.println("Playing Packet ID: " + i + ". (Repeated)");
+                            audioPlayer.playBlock(noData);
+                            System.out.println("Skipping Packet ID: " + i + ".");
                         }
                         else
                         {
