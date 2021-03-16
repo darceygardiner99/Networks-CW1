@@ -92,4 +92,29 @@ public class Utils
 
         return ret;
     }
+
+    /*
+    Credits: https://stackoverflow.com/questions/14485873/audio-change-volume-of-samples-in-byte-array
+     */
+    public static byte[] reduceAmplitude(byte[] input)
+    {
+        byte[] array = new byte[input.length];
+        for (int i = 0; i < array.length; i+=2)
+        {
+            short bufferOne = input[i + 1];
+            short bufferTwo = input[i];
+
+            bufferOne = (short) ((bufferOne & 0xff) << 8);
+            bufferTwo = (short) (bufferTwo & 0xff);
+
+            short res = (short) (bufferOne | bufferTwo);
+
+            res = (short) (res * 0.5);
+
+            array[i] = (byte) res;
+            array[i + 1] = (byte) (res >> 8);
+        }
+
+        return array;
+    }
 }

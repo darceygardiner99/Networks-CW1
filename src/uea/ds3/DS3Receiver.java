@@ -9,6 +9,7 @@ import javax.sound.sampled.LineUnavailableException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.SocketException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,12 +88,13 @@ public class DS3Receiver implements Runnable{
                         if (data != null)
                         {
                             audioPlayer.playBlock(data);
-                            previousData = data;
+                            previousData = Utils.reduceAmplitude(data);
                             System.out.println("Playing Packet ID: " + i + ". Took: " + ((System.nanoTime() - packetTimes.get(i)) / 1_000_000_000.0) + "s");
                         }
                         else if (previousData != null)
                         {
                             audioPlayer.playBlock(previousData);
+                            previousData = Utils.reduceAmplitude(previousData);
                             System.out.println("Playing Packet ID: " + i + ". (Repeated)");
                         }
                         else

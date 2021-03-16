@@ -92,11 +92,13 @@ public class AudioReceiverThread implements Runnable{
                         {
                             holder.put(data, 0, 256);
 
-                            previousData = data;
+                            previousData = Utils.reduceAmplitude(data);
+
                         }
                         else if (previousData != null)
                         {
-                            //holder.put(previousData, 0, 256);
+                            holder.put(previousData, 0, 256);
+                            previousData = Utils.reduceAmplitude(previousData);
                         }
                         else
                         {
