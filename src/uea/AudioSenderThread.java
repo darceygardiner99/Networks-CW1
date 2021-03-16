@@ -6,10 +6,8 @@ import javax.sound.sampled.LineUnavailableException;
 import java.net.*;
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Vector;
 
 public class AudioSenderThread implements Runnable{
 
@@ -79,17 +77,19 @@ public class AudioSenderThread implements Runnable{
             try{
                 //Convert the audio recorder block into an array of bytes
                 //Size is 512
-                byte[] audio = audioRecorder.getBlock();
-                byte[] timeStamp = Utils.applyTimestamp(audio, System.nanoTime());
-                byte[] data = Utils.applyId(timeStamp, id++);
+                byte[] audioOriginal = audioRecorder.getBlock();
+                ByteBuffer audioFirst = ByteBuffer.allocate(256).put(audioOriginal, 0, 256);
+                ByteBuffer audioSecond = ByteBuffer.allocate(256).put(audioOriginal, 256, 256);
 
+                byte[] firstData = Utils.applyId(Utils.applyTimestamp(audioFirst.array(), System.nanoTime()), id++);
+                DatagramPacket firstPacket = new DatagramPacket(firstData, firstData.length, clientIP, this.port);
 
-                //Make a DatagramPacket from it, with client address and port number
-                DatagramPacket packet = new DatagramPacket(data, data.length, clientIP, this.port);
+                packetStore.put(id -1, firstPacket);
 
-                /*System.out.println("Sending Packet ID: " + (id -1) + " - " + Arrays.toString(audio));*/
+                byte[] secondData = Utils.applyId(Utils.applyTimestamp(audioSecond.array(), System.nanoTime()), id++);
+                DatagramPacket secondPacket = new DatagramPacket(secondData, firstData.length, clientIP, this.port);
 
-                packetStore.put(id -1, packet);
+                packetStore.put(id -1, secondPacket);
 
                 //Send it
                 if (id != 0 && id % (blockSize*blockSize) == 0)
@@ -100,8 +100,6 @@ public class AudioSenderThread implements Runnable{
                         {
                             int localId = (blocksSent * (blockSize*blockSize)) + Utils.piFunction(i, j, blockSize);
                             sending_socket.send(packetStore.remove(localId));
-
-                            //System.out.println("Sending Packet ID: " + localId + ".");
                         }
                     }
 

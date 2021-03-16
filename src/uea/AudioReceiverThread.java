@@ -6,6 +6,7 @@ import uk.ac.uea.cmp.voip.DatagramSocket2;
 import javax.sound.sampled.LineUnavailableException;
 import java.net.*;
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -62,8 +63,8 @@ public class AudioReceiverThread implements Runnable{
         while (running){
             try{
                 //Receive a DatagramPacket (note that the string cant be more than 80 chars)
-                byte[] buffer = new byte[524];
-                DatagramPacket packet = new DatagramPacket(buffer, 0, 524);
+                byte[] buffer = new byte[268];
+                DatagramPacket packet = new DatagramPacket(buffer, 0, 268);
 
                 //Receive the packet
                 receiving_socket.receive(packet);
@@ -80,25 +81,54 @@ public class AudioReceiverThread implements Runnable{
 
                 if (id >= currentBlock + (blockSize * blockSize)) // Assume the current block is done
                 {
+                    ByteBuffer holder = ByteBuffer.allocate(512);
+
                     for (int i = currentBlock; i < currentBlock + (blockSize * blockSize); i++)
                     {
                         byte[] data = packetStore.remove(i);
 
                         if (data != null)
                         {
-                            audioPlayer.playBlock(data);
+                            holder.put(data, 0, 256);
+                            
                             previousData = data;
-                            System.out.println("Playing Packet ID: " + i + ". Took: " + ((System.nanoTime() - packetTimes.get(i)) / 1_000_000_000.0) + "s");
                         }
                         else if (previousData != null)
                         {
-                            audioPlayer.playBlock(previousData);
-                            System.out.println("Playing Packet ID: " + i + ". (Repeated)");
+                            holder.put(previousData, 0, 256);
                         }
                         else
                         {
                             //Something, the very first packet was lost..
                             System.out.println("First packet was lost?");
+                        }
+
+                        if (i % 2 == 1)
+                        {
+                            audioPlayer.playBlock(holder.array());
+                            long lastTime = 0L;
+                            if (packetTimes.get(i) == null)
+                            {
+                                if (packetTimes.get(i - 1) != null)
+                                {
+                                    lastTime = packetTimes.get(i -1);
+                                }
+                            }
+                            else
+                            {
+                                lastTime = packetTimes.get(i);
+                            }
+
+                            if (lastTime == 0L)
+                            {
+                                System.out.println("Playing Packet IDs: " + i + " & " + (i -1) + ". (Repeat)");
+                            }
+                            else
+                            {
+                                System.out.println("Playing Packet IDs: " + i + " & " + (i -1) + ". Took: " + ((System.nanoTime() - lastTime) / 1_000_000_000.0) + "s");
+                            }
+
+                            holder = ByteBuffer.allocate(512);
                         }
                     }
 
