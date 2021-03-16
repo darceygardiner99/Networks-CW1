@@ -90,12 +90,12 @@ public class AudioReceiverThread implements Runnable{
                         if (data != null)
                         {
                             holder.put(data, 0, 256);
-                            
+
                             previousData = data;
                         }
                         else if (previousData != null)
                         {
-                            holder.put(previousData, 0, 256);
+                            //holder.put(previousData, 0, 256);
                         }
                         else
                         {
