@@ -1,42 +1,82 @@
 package uea;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Utils
 {
+    public static void main(String[] args)
+    {
+        byte[] array = new byte[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+
+        byte[] encrypted = encrypt(array, 23429654);
+
+        System.out.println(Arrays.toString(encrypted));
+
+        byte[] decrypted = decrypt(encrypted, 23429654);
+
+        System.out.println(Arrays.toString(decrypted));
+    }
+
     public static byte[] encrypt(byte[] block, int key)
     {
-        ByteBuffer encrypted = ByteBuffer.allocate(block.length);
+        byte[] encrypted = new byte[block.length];
 
         ByteBuffer plainTex = ByteBuffer.wrap(block);
 
-        for (int i = 0; i < block.length / 4; i++)
+        for (int i = 0; i < block.length; i+=4)
         {
             int fourByte = plainTex.getInt();
             fourByte = fourByte ^ key;
 
-            encrypted.putInt(fourByte);
+            ByteBuffer holder = ByteBuffer.allocate(4).putInt(fourByte);
+
+            for (int x = 0; x < 4; x++)
+            {
+                encrypted[i + x] = holder.get(x);
+            }
         }
 
-        return encrypted.array();
+        ByteBuffer reversed = ByteBuffer.allocate(block.length);
+
+        for (int i = encrypted.length - 1; i > -1; i--)
+        {
+            reversed.put(encrypted[i]);
+        }
+
+        return reversed.array();
     }
 
     public static byte[] decrypt(byte[] block, int key)
     {
-        ByteBuffer decrypted = ByteBuffer.allocate(block.length);
+        byte[] encrypted = ByteBuffer.wrap(block).array();
 
-        ByteBuffer cipherText = ByteBuffer.wrap(block);
+        ByteBuffer reversed = ByteBuffer.allocate(block.length);
 
-        for (int i = 0; i < block.length / 4; i++)
+        for (int i = encrypted.length - 1; i > -1; i--)
         {
-            int fourByte = cipherText.getInt();
-            fourByte = fourByte ^ key;
-
-            decrypted.putInt(fourByte);
+            reversed.put(encrypted[i]);
         }
 
-        return decrypted.array();
+        byte[] decrypted = new byte[block.length];
+
+        reversed.rewind();
+
+        for (int i = 0; i < block.length; i+=4)
+        {
+            int fourByte = reversed.getInt();
+            fourByte = fourByte ^ key;
+
+            ByteBuffer holder = ByteBuffer.allocate(4).putInt(fourByte);
+
+            for (int x = 0; x < 4; x++)
+            {
+                decrypted[i + x] = holder.get(x);
+            }
+        }
+
+        return decrypted;
     }
 
     public static byte[] applyId(byte[] block, int id)
