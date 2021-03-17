@@ -79,32 +79,61 @@ public class DS3Receiver implements Runnable{
                 packetStore.put(id, packet.getData());
                 //System.out.println("Receiving Packet ID: " + id + ".");
 
-                if (id >= currentBlock + 7) // Assume the current block is done
+                if (id >= currentBlock + 14) // Assume the current block is done
                 {
-                    for (int i = currentBlock; i < currentBlock + 7; i++)
+                    ByteBuffer holder = ByteBuffer.allocate(512);
+
+                    for (int i = currentBlock; i < currentBlock + 14; i++)
                     {
                         byte[] data = packetStore.remove(i);
 
                         if (data != null)
                         {
-                            audioPlayer.playBlock(data);
+                            holder.put(data, 0, 256);
+
                             previousData = Utils.reduceAmplitude(data);
-                            System.out.println("Playing Packet ID: " + i + ". Took: " + ((System.nanoTime() - packetTimes.get(i)) / 1_000_000_000.0) + "s");
                         }
                         else if (previousData != null)
                         {
-                            audioPlayer.playBlock(previousData);
+                            holder.put(previousData, 0, 256);
                             previousData = Utils.reduceAmplitude(previousData);
-                            System.out.println("Playing Packet ID: " + i + ". (Repeated)");
                         }
                         else
                         {
                             //Something, the very first packet was lost..
                             System.out.println("First packet was lost?");
                         }
+
+                        if (i % 2 == 1)
+                        {
+                            audioPlayer.playBlock(holder.array());
+                            long lastTime = 0L;
+                            if (packetTimes.get(i) == null)
+                            {
+                                if (packetTimes.get(i - 1) != null)
+                                {
+                                    lastTime = packetTimes.get(i -1);
+                                }
+                            }
+                            else
+                            {
+                                lastTime = packetTimes.get(i);
+                            }
+
+                            if (lastTime == 0L)
+                            {
+                                System.out.println("Playing Packet IDs: " + i + " & " + (i -1) + ". (Repeat)");
+                            }
+                            else
+                            {
+                                System.out.println("Playing Packet IDs: " + i + " & " + (i -1) + ". Took: " + ((System.nanoTime() - lastTime) / 1_000_000_000.0) + "s");
+                            }
+
+                            holder = ByteBuffer.allocate(512);
+                        }
                     }
 
-                    currentBlock += 7;
+                    currentBlock += 14;
                 }
             } catch (IOException e){
                 System.out.println("ERROR: " + getClass().getSimpleName() + ": Some random IO error occured!");

@@ -10,6 +10,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,17 +77,18 @@ public class DS3Sender implements Runnable{
             try{
                 //Convert the audio recorder block into an array of bytes
                 //Size is 512
-                byte[] audio = audioRecorder.getBlock();
-                byte[] timeStamp = Utils.applyTimestamp(audio, System.nanoTime());
-                byte[] data = Utils.applyId(timeStamp, id++);
+                byte[] audioOriginal = audioRecorder.getBlock();
+                ByteBuffer audioFirst = ByteBuffer.allocate(256).put(audioOriginal, 0, 256);
+                ByteBuffer audioSecond = ByteBuffer.allocate(256).put(audioOriginal, 256, 256);
 
+                byte[] firstData = Utils.applyId(Utils.applyTimestamp(audioFirst.array(), System.nanoTime()), id++);
+                DatagramPacket firstPacket = new DatagramPacket(firstData, firstData.length, clientIP, this.port);
 
-                //Make a DatagramPacket from it, with client address and port number
-                DatagramPacket packet = new DatagramPacket(data, data.length, clientIP, this.port);
+                byte[] secondData = Utils.applyId(Utils.applyTimestamp(audioSecond.array(), System.nanoTime()), id++);
+                DatagramPacket secondPacket = new DatagramPacket(secondData, secondData.length, clientIP, this.port);
 
-                /*System.out.println("Sending Packet ID: " + (id -1) + " - " + Arrays.toString(audio));*/
-
-                sending_socket.send(packet);
+                sending_socket.send(firstPacket);
+                sending_socket.send(secondPacket);
 
             } catch (IOException e){
                 System.out.println("ERROR: " + getClass().getSimpleName() + ": Some random IO error occured!");
