@@ -1,7 +1,6 @@
 package uea.ds1;
 
 import CMPC3M06.AudioRecorder;
-import uk.ac.uea.cmp.voip.DatagramSocket2;
 
 import javax.sound.sampled.LineUnavailableException;
 import java.io.IOException;
@@ -45,7 +44,7 @@ public class DS1Sender implements Runnable{
         //We dont need to know its port number as we never send anything to it.
         //We need the try and catch block to make sure no errors occur.
         try{
-            sending_socket = new DatagramSocket2();
+            sending_socket = new DatagramSocket();
         } catch (SocketException e){
             System.out.println("ERROR: " + getClass().getSimpleName() + ": Could not open UDP socket to send from.");
             e.printStackTrace();

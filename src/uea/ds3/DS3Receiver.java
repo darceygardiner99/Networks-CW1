@@ -2,7 +2,6 @@ package uea.ds3;
 
 import CMPC3M06.AudioPlayer;
 import uea.Utils;
-import uk.ac.uea.cmp.voip.DatagramSocket2;
 import uk.ac.uea.cmp.voip.DatagramSocket3;
 
 import javax.sound.sampled.LineUnavailableException;
