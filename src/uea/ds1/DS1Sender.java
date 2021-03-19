@@ -1,7 +1,6 @@
 package uea.ds1;
 
 import CMPC3M06.AudioRecorder;
-import uea.Utils;
 import uk.ac.uea.cmp.voip.DatagramSocket2;
 
 import javax.sound.sampled.LineUnavailableException;
@@ -11,13 +10,10 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
 
 public class DS1Sender implements Runnable{
 
-    static DatagramSocket2 sending_socket;
+    static DatagramSocket sending_socket;
     private final int port;
     private final String address;
 

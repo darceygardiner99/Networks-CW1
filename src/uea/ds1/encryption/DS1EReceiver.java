@@ -2,16 +2,16 @@ package uea.ds1.encryption;
 
 import CMPC3M06.AudioPlayer;
 import uea.Utils;
-import uk.ac.uea.cmp.voip.DatagramSocket2;
 
 import javax.sound.sampled.LineUnavailableException;
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.SocketException;
 
 public class DS1EReceiver implements Runnable{
 
-    static DatagramSocket2 receiving_socket;
+    static DatagramSocket receiving_socket;
     private final int port;
     private final boolean encryption;
     private final int key;
@@ -32,7 +32,7 @@ public class DS1EReceiver implements Runnable{
 
         //Open a socket to receive from on port PORT
         try{
-            receiving_socket = new DatagramSocket2(this.port);
+            receiving_socket = new DatagramSocket(this.port);
         } catch (SocketException e){
             System.out.println("ERROR: " + getClass().getSimpleName() + ": Could not open UDP socket to receive from.");
             e.printStackTrace();

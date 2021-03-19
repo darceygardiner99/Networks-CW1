@@ -2,18 +2,18 @@ package uea.ds1.encryption;
 
 import CMPC3M06.AudioRecorder;
 import uea.Utils;
-import uk.ac.uea.cmp.voip.DatagramSocket2;
 
 import javax.sound.sampled.LineUnavailableException;
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
 public class DS1ESender implements Runnable{
 
-    static DatagramSocket2 sending_socket;
+    static DatagramSocket sending_socket;
     private final int port;
     private final String address;
     private final boolean encryption;
@@ -49,7 +49,7 @@ public class DS1ESender implements Runnable{
         //We dont need to know its port number as we never send anything to it.
         //We need the try and catch block to make sure no errors occur.
         try{
-            sending_socket = new DatagramSocket2();
+            sending_socket = new DatagramSocket();
         } catch (SocketException e){
             System.out.println("ERROR: " + getClass().getSimpleName() + ": Could not open UDP socket to send from.");
             e.printStackTrace();
